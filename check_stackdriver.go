@@ -26,6 +26,7 @@ type Options struct {
 	Critical  float64 `short:"c" long:"critical"  required:"false" default:"0.0" description:"Critical threshold." `
 	Warning   float64 `short:"w" long:"warning"   required:"false" default:"0.0" description:"Warning threshold." `
 	Verbose   []bool  `short:"v" long:"verbose"   required:"false" description:"Verbose option." `
+	Invert    bool  `short:"i" long:"invert"    required:"false" description:"Invert critical/warning check" `
 }
 
 func main() {
@@ -91,16 +92,31 @@ func main() {
 
 	status := OK
 	message := ""
-	switch {
-	case (opts.Critical > 0.0 && value >= opts.Critical):
-		status = CRITICAL
-		message = fmt.Sprintf("%s value: %d over %d", opts.Evalution, int(value), int(opts.Critical))
-	case (opts.Warning > 0.0 && value >= opts.Warning):
-		status = WARNING
-		message = fmt.Sprintf("%s value: %d over %d", opts.Evalution, int(value), int(opts.Warning))
-	default:
-		status = OK
-		message = fmt.Sprintf("%s value: %d ", opts.Evalution, int(value))
+	if !(opts.Invert) {
+		switch {
+		case (opts.Critical > 0.0 && value >= opts.Critical):
+			status = CRITICAL
+			message = fmt.Sprintf("%s value: %d over %d", opts.Evalution, int(value), int(opts.Critical))
+		case (opts.Warning > 0.0 && value >= opts.Warning):
+			status = WARNING
+			message = fmt.Sprintf("%s value: %d over %d", opts.Evalution, int(value), int(opts.Warning))
+		default:
+			status = OK
+			message = fmt.Sprintf("%s value: %d ", opts.Evalution, int(value))
+		}
+	}
+	if (opts.Invert) {
+		switch {
+		case (value <= opts.Critical):
+			status = CRITICAL
+			message = fmt.Sprintf("%s value: %d under %d", opts.Evalution, int(value), int(opts.Critical))
+		case (value <= opts.Warning):
+			status = WARNING
+			message = fmt.Sprintf("%s value: %d under %d", opts.Evalution, int(value), int(opts.Warning))
+		default:
+			status = OK
+			message = fmt.Sprintf("%s value: %d ", opts.Evalution, int(value))
+		}
 	}
 	paformace := fmt.Sprintf("|value=%f;%d;%d", value, int(opts.Warning), int(opts.Critical))
 	output(status, message+paformace)
